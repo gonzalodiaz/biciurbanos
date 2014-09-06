@@ -1,58 +1,136 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8" />
-        <title>Google Maps v3 API Example</title>
-        <style>
-            html, body, #map {
-                height: 100%;
-                width: 100%;
-                margin: 0;
-                padding: 0;
+<head>
+    <meta charset="utf-8"/>
+    <title>BiciUrbanos</title>
+    <style>
+        html, body, #map {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        div#footer {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 18px;
+            margin: 0;
+            padding: 6px;
+            z-index: 2;
+            background: WHITE;
+        }
+
+        #panel {
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            margin-left: -180px;
+            z-index: 5;
+            background-color: #fff;
+            padding: 5px;
+            border: 1px solid #999;
+        }
+    </style>
+</head>
+<body>
+<div id="panel">
+    <b>Buscá tu camino: </b>
+    <input type="text" id="from_address" placeholder="Desde">
+    <input type="text" id="to_address" placeholder="Hasta">
+    <!--input type="text" id="to_lat" placeholder="Latitud hasta">
+    <input type="text" id="to_long" placeholder="Longitud hasta"-->
+    <button id="trigger" onclick="calcRoute();">
+        Calcular ruta
+    </button>
+</div>
+<div id="map" style="float: left;"></div>
+
+<div id="footer">&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors</div>
+
+<!-- bring in the google maps library -->
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
+
+<script type="text/javascript">
+    //Google maps API initialisation
+    var element = document.getElementById("map");
+
+    var map = new google.maps.Map(element, {
+        center: new google.maps.LatLng(-31.3987552, -64.1868587),
+        zoom: 12,
+        mapTypeId: "OSM",
+        mapTypeControl: false,
+        streetViewControl: true
+    });
+
+    //Define OSM map type pointing at the OpenStreetMap tile server
+    map.mapTypes.set("OSM", new google.maps.ImageMapType({
+        getTileUrl: function (coord, zoom) {
+            return "http://tile.openstreetmap.org/" + zoom + "/" + coord.x + "/" + coord.y + ".png";
+        },
+        tileSize: new google.maps.Size(256, 256),
+        name: "Biciurbanos - Provided by OpenStreetMap",
+        maxZoom: 18
+    }));
+
+    var directionsDisplay = new google.maps.DirectionsRenderer();
+    directionsDisplay.setMap(map);
+    var directionsService = new google.maps.DirectionsService();
+    var olmos = new google.maps.LatLng(-31.3987552, -64.1868587);
+    var cdad_univ = new google.maps.LatLng(-31.3487552, -64.4868587);
+
+
+    function codeAddress(direccionFrom, direccionTo, callback) {
+        //var address = document.getElementById('address').value;
+        var locationFrom;
+        var locationTo;
+        console.log(direccionFrom, direccionTo);
+        var geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ 'address': direccionFrom, 'region': 'ar'}, function (results, status) {
+            if (status == google.maps.GeocoderStatus.OK) {
+                locationFrom = results[0].geometry.location;
+                geocoder.geocode({ 'address': direccionTo, 'region': 'ar'}, function (results, status) {
+                    if (status == google.maps.GeocoderStatus.OK) {
+                        locationTo = results[0].geometry.location;
+                        callback(locationFrom, locationTo);
+                    } else {
+                        alert('Geocode was not successful for the following reason: ' + status);
+                    }
+                });
+            } else {
+                alert('Geocode was not successful for the following reason: ' + status);
             }
-            div#footer {
-                position: fixed;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                width: 100%;
-                height: 18px;
-                margin: 0;
-                padding: 6px;
-                z-index: 2;
-                background: WHITE;
-            }
-        </style> 
-    </head>
-    <body>
-        <div id="map" style="float: left;"></div>
- 
-        <div id="footer">&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors</div>
- 
-        <!-- bring in the google maps library -->
-        <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false"></script>
- 
-        <script type="text/javascript">
-            //Google maps API initialisation
-            var element = document.getElementById("map");
- 
-            var map = new google.maps.Map(element, {
-                center: new google.maps.LatLng(-31.3987552,-64.1868587),
-                zoom: 12,
-                mapTypeId: "OSM",
-                mapTypeControl: false,
-                streetViewControl: true
+        });
+    }
+
+    function calcRoute() {
+
+        var from_address = document.getElementById("from_address").value;
+        var to_address = document.getElementById("to_address").value;
+        codeAddress(from_address, to_address, function(locFrom, locTo){
+            var request = {
+                origin: new google.maps.LatLng(locFrom.k, locFrom.B),
+                destination: new google.maps.LatLng(locTo.k, locTo.B),
+                // Note that Javascript allows us to access the constant
+                // using square brackets and a string value as its
+                // "property."
+                travelMode: google.maps.TravelMode["WALKING"]
+            };
+            directionsService.route(request, function (response, status) {
+                if (status == google.maps.DirectionsStatus.OK) {
+                    directionsDisplay.setDirections(response);
+                } else {
+                    alert("error: " + status)
+                }
             });
- 
-            //Define OSM map type pointing at the OpenStreetMap tile server
-            map.mapTypes.set("OSM", new google.maps.ImageMapType({
-                getTileUrl: function(coord, zoom) {
-                    return "http://tile.openstreetmap.org/" + zoom + "/" + coord.x + "/" + coord.y + ".png";
-                },
-                tileSize: new google.maps.Size(256, 256),
-                name: "Biciurbanos - Provided by OpenStreetMap",
-                maxZoom: 18
-            }));
-        </script>
-    </body>
+        });
+    }
+
+    //google.maps.event.addDomListener(window, 'load', initialize);
+
+</script>
+</body>
 </html>
