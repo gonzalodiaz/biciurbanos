@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8"/>
-    <title>Google Maps v3 API Example</title>
+    <title>BiciUrbanos</title>
     <style>
         html, body, #map {
             height: 100%;
@@ -38,7 +38,7 @@
 </head>
 <body>
 <div id="panel">
-    <b>Mode of Travel: </b>
+    <b>Buscá tu camino: </b>
     <input type="text" id="from_address" placeholder="Desde">
     <input type="text" id="to_address" placeholder="Hasta">
     <!--input type="text" id="to_lat" placeholder="Latitud hasta">
@@ -112,12 +112,12 @@
         var to_address = document.getElementById("to_address").value;
         codeAddress(from_address, to_address, function(locFrom, locTo){
             var request = {
-                origin: new google.maps.LatLng(locFrom.B, locFrom.k),
-                destination: new google.maps.LatLng(locTo.B, locTo.k),
+                origin: new google.maps.LatLng(locFrom.k, locFrom.B),
+                destination: new google.maps.LatLng(locTo.k, locTo.B),
                 // Note that Javascript allows us to access the constant
                 // using square brackets and a string value as its
                 // "property."
-                travelMode: google.maps.TravelMode["DRIVING"]
+                travelMode: google.maps.TravelMode["WALKING"]
             };
             directionsService.route(request, function (response, status) {
                 if (status == google.maps.DirectionsStatus.OK) {
